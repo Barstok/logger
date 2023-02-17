@@ -1,6 +1,36 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-int logger_init();
+#include <semaphore.h>
+#include <pthread.h>
+#include <sys/signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+typedef enum{
+    OFF,
+    MIN,
+    STANDARD,
+    MAX
+} LogLevel;
+
+struct logger{
+    int is_initialized;
+    LogLevel level;
+    char* dumpfile_path;
+    FILE* logfile;
+    sem_t sem_dump;
+    sem_t sem_write_log;
+    pthread_t dump_thread;
+    pthread_t config_thread;
+};
+
+int logger_init(LogLevel level, char* dumpfile_path, char* logfile_path);
+int logger_close();
+
+void* dump_log(void* args);
+
+void dump_signal_handler(int signo, siginfo_t *info, void *other);
 
 #endif

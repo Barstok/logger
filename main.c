@@ -1,6 +1,18 @@
-#include <stdio.h>
+#include "logger.h"
 
-int main(){
-    printf("Hello World\n");
-    return 0;
+struct test{
+	int pzdr;
+	int siema;
+};
+
+int main(void) {
+	printf("PID %d\n", getpid());
+
+	struct test t;
+
+	logger_init(STANDARD, "test", "test");
+
+	logger_close();
+
+	return 0;
 }
