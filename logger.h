@@ -22,6 +22,7 @@ struct logger{
     FILE* logfile;
     sem_t sem_dump;
     sem_t sem_write_log;
+    sem_t sem_config;
     pthread_t dump_thread;
     pthread_t config_thread;
 };
@@ -31,6 +32,12 @@ int logger_close();
 
 void* dump_log(void* args);
 
-void dump_signal_handler(int signo, siginfo_t *info, void *other);
+void set_config(LogLevel new_level);
+int log_msg(LogLevel level, char *msg);
+
+void dump_signal_handler(int signo, siginfo_t *info, void *);
+void config_signal_handler(int signo, siginfo_t *info, void *);
+
+const char* getLogLevelName(LogLevel level);
 
 #endif

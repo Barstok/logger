@@ -11,7 +11,7 @@ int main(void) {
 	struct test t;
 
 	logger_init(STANDARD, "test", "test");
-
+	log_msg(STANDARD, "test");
 	logger_close();
 
 	return 0;
