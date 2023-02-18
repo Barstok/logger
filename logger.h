@@ -35,6 +35,7 @@ void* dump_log(void* args);
 void set_config(LogLevel new_level);
 int log_msg(LogLevel level, char *msg);
 
-const char* getLogLevelName(LogLevel level);
+const char* get_LogLevel_name(LogLevel level);
+const char* get_current_time();
 
 #endif

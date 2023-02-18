@@ -4,6 +4,8 @@ static struct logger logger;
 
 void dump_signal_handler(int signo, siginfo_t *info, void *context)
 {
+    printf("dump signal\n");
+    fflush(stdout);
     sem_post(&logger.sem_dump);
 }
 
@@ -49,7 +51,7 @@ int logger_init(LogLevel level, char *dumpfile_path, char *logfile_path)
     sig_action_config.sa_mask = config_set;
     sig_action_config.sa_flags = SA_SIGINFO;
 
-    sigaction(SIGRTMIN+1, &sig_action_config, NULL);
+    sigaction(SIGRTMIN + 1, &sig_action_config, NULL);
 
     logger.is_initialized = 1;
 }
@@ -72,12 +74,15 @@ void *dump_log(void *args)
 {
     while (1)
     {
-        fflush(stdout);
         sem_wait(&logger.sem_dump);
-        FILE *dumpfile = fopen(logger.dumpfile_path, "wb");
+        
+        char filename[200];
+        sprintf(filename, "%s/dumpfile_%s_.dmp", logger.dumpfile_path, get_current_time());
+
+        FILE *dumpfile = fopen(filename, "wb");
 
         fwrite(&logger, sizeof(LogLevel), 1, dumpfile);
-
+        
         fclose(dumpfile);
     }
 }
@@ -87,23 +92,24 @@ int log_msg(LogLevel level, char *msg)
     if (!logger.is_initialized)
         return -1;
 
-    if (level < logger.level)
+    if (level < logger.level || logger.level == OFF)
         return 0;
 
     sem_wait(&logger.sem_write_log);
-    fprintf(logger.logfile, "%s %s\n", getLogLevelName(level), msg);
+    fprintf(logger.logfile, "%s %s %s\n", get_LogLevel_name(level), get_current_time(), msg);
     sem_post(&logger.sem_write_log);
 
     return 1;
 }
 
-void set_config(LogLevel new_level){
+void set_config(LogLevel new_level)
+{
     sem_wait(&logger.sem_config);
 
     logger.level = new_level;
 }
 
-const char *getLogLevelName(LogLevel level)
+const char *get_LogLevel_name(LogLevel level)
 {
     switch (level)
     {
@@ -114,4 +120,12 @@ const char *getLogLevelName(LogLevel level)
     case MAX:
         return "MAX";
     }
+}
+
+const char *get_current_time()
+{
+    time_t mytime = time(NULL);
+    char *time_str = ctime(&mytime);
+    time_str[strlen(time_str) - 1] = '\0';
+    return time_str;
 }
