@@ -15,10 +15,16 @@ typedef enum{
     MAX
 } LogLevel;
 
+typedef struct{
+    void* dump;
+    int dump_size;
+} Dump;
+
 struct logger{
     int is_initialized;
     LogLevel level;
     char* dumpfile_path;
+    Dump  (*dump_function)(void);
     FILE* logfile;
     sem_t sem_dump;
     sem_t sem_write_log;
@@ -27,7 +33,7 @@ struct logger{
     pthread_t config_thread;
 };
 
-int logger_init(LogLevel level, char* dumpfile_path, char* logfile_path);
+int logger_init(LogLevel level, char* logfile_path, char *dumpfile_path, Dump (*dump_function)(void));
 int logger_close();
 
 void* dump_log(void* args);
