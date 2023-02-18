@@ -2,6 +2,17 @@
 
 static struct logger logger;
 
+void dump_signal_handler(int signo, siginfo_t *info, void *context)
+{
+    sem_post(&logger.sem_dump);
+}
+
+void config_signal_handler(int signo, siginfo_t *info, void *context)
+{
+    sem_post(&logger.sem_config);
+    set_config(info->si_value.sival_int);
+}
+
 int logger_init(LogLevel level, char *dumpfile_path, char *logfile_path)
 {
     logger.level = level;
@@ -48,7 +59,7 @@ int logger_close()
     if (!logger.is_initialized)
         return -1;
 
-    pthread_join(logger.dump_thread, NULL);
+    pthread_cancel(logger.dump_thread);
 
     fclose(logger.logfile);
 
@@ -57,25 +68,12 @@ int logger_close()
     sem_destroy(&logger.sem_config);
 }
 
-void dump_signal_handler(int signo, siginfo_t *info, void *context)
-{
-    sem_post(&logger.sem_dump);
-}
-
-void config_signal_handler(int signo, siginfo_t *info, void *context)
-{
-    sem_post(&logger.sem_config);
-    set_config(info->si_value.sival_int);
-}
-
 void *dump_log(void *args)
 {
-    fflush(stdout);
     while (1)
     {
-        sem_wait(&logger.sem_dump);
-        printf("dump_log");
         fflush(stdout);
+        sem_wait(&logger.sem_dump);
         FILE *dumpfile = fopen(logger.dumpfile_path, "wb");
 
         fwrite(&logger, sizeof(LogLevel), 1, dumpfile);
@@ -102,8 +100,6 @@ int log_msg(LogLevel level, char *msg)
 void set_config(LogLevel new_level){
     sem_wait(&logger.sem_config);
 
-    printf("%s %s\n", getLogLevelName(new_level), getLogLevelName(logger.level));
-    fflush(stdout);
     logger.level = new_level;
 }
 
