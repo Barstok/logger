@@ -22,7 +22,7 @@ int logger_init(LogLevel level, char *logfile_path, char *dumpfile_path, Dump (*
     if (logger.logfile == NULL)
         return -1;
 
-    sem_init(&logger.sem_write_log, 0, 0);
+    sem_init(&logger.sem_write_log, 0, 1);
     sem_init(&logger.sem_dump, 0, 0);
     sem_init(&logger.sem_config, 0, 0);
 
